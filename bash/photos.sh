@@ -1,7 +1,7 @@
 #!/bin/bash
 
 show_usage() {
-  echo "Usage: ./photos.sh [-f FROM |--from=FROM] [-t TO|--to=TO]"
+  echo "Usage: ./photos.sh [--from=FROM] [--to=TO]"
 }
 
 show_help() {
@@ -38,13 +38,19 @@ done
 
 echo "==== copying from $FROM to $TO ===="
 
-find $FROM -path $TO -prune -o -type f -iname "*.JPG" | while read f ; do
+find "$FROM" -path "$TO" -prune -o -type f -iname "*.JPG" | while read f ; do
 exifdate=$(exif "$f" | grep Origi | awk '{print $4}' | sed s/'(Origi|'/''/ | sed s/':'/'\ '/g )
 exiftime=$(exif "$f" | grep Origi | awk '{print $5}' | sed s/':'/'-'/g)
 exifyear="$(echo $exifdate | awk '{print $1}' )"
 exifmonth="$(echo $exifdate | awk '{print $2}' )"
 exifday="$(echo $exifdate | awk '{print $3}' )"
 target="$TO/$exifyear/$exifmonth"
+
+if [ "$target" == "$TO//" ]; then
+    target="$TO/trash"
+    exifdate=$(echo $f | sed s/'\/'/'-'/g | sed s/'\.'/'-'/g)
+    exiftime=""
+fi
 
 filename=$(echo $exifdate | sed s/'\ '/'-'/g)
 filename="$target/$filename $exiftime.JPG"
